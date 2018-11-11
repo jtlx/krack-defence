@@ -4,6 +4,10 @@ import pprint
 
 interface='wlan0mon'
 
+# TODO:
+# 1. Prettify output
+# 2. Disassociate the attacker by forging disassoc. or deauth packets
+
 def get_largest_difference(lst):
     highest = 0
     lowest = 99
@@ -28,7 +32,7 @@ def pkt_handler(pkt):
 
             for addr in addr_to_channels:
                 curr_largest_difference = get_largest_difference(addr_to_channels[addr])
-                sys.stdout.write(addr_to_ssid[addr] + " " + str(curr_largest_difference))
+                sys.stdout.write(addr_to_ssid[addr] + " " + str(curr_largest_difference) + " channel(s) apart")
                 if curr_largest_difference > 4:
                     sys.stdout.write("  <-- Possibly being cloned on another channel!")
                 sys.stdout.write("\n")
