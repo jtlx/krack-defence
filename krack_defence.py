@@ -1,12 +1,28 @@
 from scapy.all import *
 import os, time, sys, signal
 import pprint
+from tabulate import tabulate
 
 interface='wlan0mon'
+ALERT_THRESHOLD = 4
+logo = """
+  _               _          _      __
+ | |___ _ __ _ __| |_____ __| |___ / _|___ _ _  __ ___
+ | / / '_/ _` / _| / /___/ _` / -_)  _/ -_) ' \/ _/ -_)
+ |_\_\_| \__,_\__|_\_\   \__,_\___|_| \___|_||_\__\___|
+
+
+ Written by: Chee Yi Hsien Shaun, Chew Hong Kai, Seow Wei Jie, Tan Wei, Tang Lang Xing Joseph
+
+
+"""
 
 # TODO:
-# 1. Prettify output
-# 2. Disassociate the attacker by forging disassoc. or deauth packets
+# 1. Disassociate the attacker by forging disassoc. or deauth packets
+
+def clear():
+    os.system('clear')
+
 
 def get_largest_difference(lst):
     highest = 0
@@ -31,16 +47,25 @@ def pkt_handler(pkt):
         if current_channel not in addr_to_channels[addr]:
             addr_to_channels[addr].append(current_channel)
             print "New: %s" % (ssid + " ch:" + str(current_channel))
-            pprint.pprint(addr_to_channels)
+            draw_table()
 
-            # Update and display the list of channels per MAC address
-            for addr in addr_to_channels:
-                curr_largest_difference = get_largest_difference(addr_to_channels[addr])
-                sys.stdout.write(addr_to_ssid[addr] + " " + str(curr_largest_difference) + " channel(s) apart")
-                if curr_largest_difference > 4:
-                    sys.stdout.write("  <-- Possibly being cloned on another channel!")
-                sys.stdout.write("\n")
-                sys.stdout.flush()
+def draw_table():
+    clear()
+    # get things into a table
+    # Columns: name, ssid, channels, alert
+    table = []
+    for addr in addr_to_channels:
+        ssid = addr_to_ssid[addr]
+        channels = ",".join(str(x) for x in addr_to_channels[addr])
+        curr_largest_difference = get_largest_difference(addr_to_channels[addr])
+        if curr_largest_difference > ALERT_THRESHOLD: status = "Possibly being cloned by Rogue AP!"
+        else: status = "OK"
+        table.append([ssid, addr, channels, status])
+    print logo
+    print tabulate(table, headers=["SSID", "MAC Address", "Channels", "Status"])
+
+
+
 
 
 if __name__ == "__main__":
